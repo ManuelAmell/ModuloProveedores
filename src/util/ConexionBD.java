@@ -28,6 +28,7 @@
 
 package util;
 
+// Re-indexing trigger
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

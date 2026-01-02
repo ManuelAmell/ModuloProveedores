@@ -45,7 +45,6 @@ import javax.swing.table.DefaultTableModel; // Modelo de datos para JTable
 
 // Clases de AWT para eventos y diseño
 import java.awt.*; // BorderLayout, FlowLayout, Color, Font
-import java.awt.event.*; // ActionListener, ActionEvent
 
 // Clases de utilidad
 import java.util.List;
