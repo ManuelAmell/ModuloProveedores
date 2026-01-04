@@ -73,52 +73,25 @@ public class ProveedorDAOMySQL implements ProveedorDAO {
      */
     @Override
     public boolean insertar(Proveedor proveedor) {
-        /*
-         * SQL INSERT: Agrega un nuevo registro a la tabla.
-         * 
-         * Los '?' son PLACEHOLDERS (marcadores de posición)
-         * que serán reemplazados por valores reales de forma
-         * segura usando setXxx() del PreparedStatement.
-         */
-        String sql = "INSERT INTO proveedores (nombre, nit, direccion, telefono, email, persona_contacto, activo) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO proveedores (nombre, nit, tipo, direccion, telefono, email, persona_contacto, informacion_pago, activo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        /*
-         * TRY-WITH-RESOURCES:
-         * Esta sintaxis asegura que los recursos (Connection,
-         * PreparedStatement) se cierren automáticamente al
-         * terminar, incluso si hay excepciones.
-         * 
-         * Statement.RETURN_GENERATED_KEYS indica que queremos
-         * obtener el ID autogenerado después del INSERT.
-         */
         try (Connection conn = conexionBD.getConexion();
                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            /*
-             * setXxx(posición, valor): Asigna valores a los placeholders.
-             * Las posiciones empiezan en 1 (no en 0).
-             */
             stmt.setString(1, proveedor.getNombre());
             stmt.setString(2, proveedor.getNit());
-            stmt.setString(3, proveedor.getDireccion());
-            stmt.setString(4, proveedor.getTelefono());
-            stmt.setString(5, proveedor.getEmail());
-            stmt.setString(6, proveedor.getPersonaContacto());
-            stmt.setBoolean(7, proveedor.isActivo());
+            stmt.setString(3, proveedor.getTipo());
+            stmt.setString(4, proveedor.getDireccion());
+            stmt.setString(5, proveedor.getTelefono());
+            stmt.setString(6, proveedor.getEmail());
+            stmt.setString(7, proveedor.getPersonaContacto());
+            stmt.setString(8, proveedor.getInformacionPago());
+            stmt.setBoolean(9, proveedor.isActivo());
 
-            /*
-             * executeUpdate(): Ejecuta INSERT, UPDATE o DELETE.
-             * Retorna el número de filas afectadas.
-             */
             int filasAfectadas = stmt.executeUpdate();
 
-            // Obtener el ID generado
             if (filasAfectadas > 0) {
-                /*
-                 * getGeneratedKeys(): Obtiene las claves generadas
-                 * (en este caso, el ID autoincremental).
-                 */
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         proveedor.setId(rs.getInt(1));
@@ -201,15 +174,10 @@ public class ProveedorDAOMySQL implements ProveedorDAO {
         return proveedores;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * Actualiza los datos de un proveedor existente.
-     */
     @Override
     public boolean actualizar(Proveedor proveedor) {
-        String sql = "UPDATE proveedores SET nombre = ?, nit = ?, direccion = ?, " +
-                "telefono = ?, email = ?, persona_contacto = ?, activo = ? " +
+        String sql = "UPDATE proveedores SET nombre = ?, nit = ?, tipo = ?, direccion = ?, " +
+                "telefono = ?, email = ?, persona_contacto = ?, informacion_pago = ?, activo = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = conexionBD.getConexion();
@@ -217,12 +185,14 @@ public class ProveedorDAOMySQL implements ProveedorDAO {
 
             stmt.setString(1, proveedor.getNombre());
             stmt.setString(2, proveedor.getNit());
-            stmt.setString(3, proveedor.getDireccion());
-            stmt.setString(4, proveedor.getTelefono());
-            stmt.setString(5, proveedor.getEmail());
-            stmt.setString(6, proveedor.getPersonaContacto());
-            stmt.setBoolean(7, proveedor.isActivo());
-            stmt.setInt(8, proveedor.getId());
+            stmt.setString(3, proveedor.getTipo());
+            stmt.setString(4, proveedor.getDireccion());
+            stmt.setString(5, proveedor.getTelefono());
+            stmt.setString(6, proveedor.getEmail());
+            stmt.setString(7, proveedor.getPersonaContacto());
+            stmt.setString(8, proveedor.getInformacionPago());
+            stmt.setBoolean(9, proveedor.isActivo());
+            stmt.setInt(10, proveedor.getId());
 
             int filasAfectadas = stmt.executeUpdate();
             return filasAfectadas > 0;
@@ -364,22 +334,16 @@ public class ProveedorDAOMySQL implements ProveedorDAO {
      * @throws SQLException Si hay error al leer los datos
      */
     private Proveedor mapearResultSet(ResultSet rs) throws SQLException {
-        /*
-         * Creamos un proveedor usando el constructor vacío
-         * y luego asignamos cada campo con los setters.
-         * 
-         * rs.getInt("columna"): Obtiene un entero
-         * rs.getString("columna"): Obtiene un String
-         * rs.getBoolean("columna"): Obtiene un boolean
-         */
         Proveedor proveedor = new Proveedor();
         proveedor.setId(rs.getInt("id"));
         proveedor.setNombre(rs.getString("nombre"));
         proveedor.setNit(rs.getString("nit"));
+        proveedor.setTipo(rs.getString("tipo"));
         proveedor.setDireccion(rs.getString("direccion"));
         proveedor.setTelefono(rs.getString("telefono"));
         proveedor.setEmail(rs.getString("email"));
         proveedor.setPersonaContacto(rs.getString("persona_contacto"));
+        proveedor.setInformacionPago(rs.getString("informacion_pago"));
         proveedor.setActivo(rs.getBoolean("activo"));
 
         return proveedor;

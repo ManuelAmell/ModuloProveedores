@@ -102,57 +102,28 @@ public class ProveedorService {
      * @return Mensaje indicando el resultado de la operación
      */
     public String registrarProveedor(Proveedor proveedor) {
-        /*
-         * VALIDACIONES DE NEGOCIO:
-         * 
-         * Antes de guardar, verificamos que los datos sean válidos.
-         * Si hay un error, retornamos un mensaje explicativo.
-         */
-
         // Validar que el nombre no esté vacío
         if (proveedor.getNombre() == null || proveedor.getNombre().trim().isEmpty()) {
-            /*
-             * trim() elimina espacios al inicio y final del texto
-             * "  hola  ".trim() -> "hola"
-             * "   ".trim() -> "" (vacío)
-             * 
-             * isEmpty() verifica si el String está vacío
-             */
             return "Error: El nombre del proveedor es obligatorio";
         }
 
-        // Validar que el NIT no esté vacío
-        if (proveedor.getNit() == null || proveedor.getNit().trim().isEmpty()) {
-            return "Error: El NIT es obligatorio";
-        }
-
-        // Validar que el NIT no esté repetido
-        // Usamos el DAO para verificar si ya existe
-        if (proveedorDAO.buscarPorNit(proveedor.getNit()) != null) {
-            return "Error: Ya existe un proveedor con el NIT " + proveedor.getNit();
+        // Validar que el NIT no esté repetido (solo si se proporcionó)
+        if (proveedor.getNit() != null && !proveedor.getNit().trim().isEmpty()) {
+            if (proveedorDAO.buscarPorNit(proveedor.getNit()) != null) {
+                return "Error: Ya existe un proveedor con el NIT " + proveedor.getNit();
+            }
         }
 
         // Validar formato de email si se proporcionó
         if (proveedor.getEmail() != null && !proveedor.getEmail().isEmpty()) {
-            /*
-             * Expresión regular para validar email:
-             * ^[\w.-]+ : Inicio con letras, números, punto o guion
-             * 
-             * @ : Debe contener arroba
-             * [\w.-]+ : Dominio con letras, números, punto o guion
-             * \. : Un punto
-             * [a-zA-Z]{2,} : Extensión de al menos 2 letras
-             */
             String emailRegex = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
             if (!proveedor.getEmail().matches(emailRegex)) {
                 return "Error: El formato del email no es válido";
             }
         }
 
-        // Si pasa todas las validaciones, insertamos
         boolean exito = proveedorDAO.insertar(proveedor);
 
-        // Retornamos mensaje según el resultado
         if (exito) {
             return "Proveedor registrado exitosamente con ID: " + proveedor.getId();
         } else {
@@ -206,15 +177,12 @@ public class ProveedorService {
             return "Error: El nombre del proveedor es obligatorio";
         }
 
-        // Validar NIT
-        if (proveedor.getNit() == null || proveedor.getNit().trim().isEmpty()) {
-            return "Error: El NIT es obligatorio";
-        }
-
-        // Verificar que el NIT no esté usado por otro proveedor
-        Proveedor existente = proveedorDAO.buscarPorNit(proveedor.getNit());
-        if (existente != null && existente.getId() != proveedor.getId()) {
-            return "Error: El NIT " + proveedor.getNit() + " ya está en uso por otro proveedor";
+        // Verificar que el NIT no esté usado por otro proveedor (solo si se proporcionó)
+        if (proveedor.getNit() != null && !proveedor.getNit().trim().isEmpty()) {
+            Proveedor existente = proveedorDAO.buscarPorNit(proveedor.getNit());
+            if (existente != null && existente.getId() != proveedor.getId()) {
+                return "Error: El NIT " + proveedor.getNit() + " ya está en uso por otro proveedor";
+            }
         }
 
         // Actualizar

@@ -30,8 +30,8 @@
 // Importamos Swing para crear la interfaz
 import javax.swing.*;
 
-// Importamos nuestra ventana principal
-import vista.VentanaPrincipal;
+// Importamos nuestra ventana unificada
+import vista.VentanaUnificada;
 
 /**
  * Clase principal que inicia la aplicación.
@@ -157,56 +157,30 @@ public class Main {
      * Este método se ejecuta en el Event Dispatch Thread.
      */
     private static void iniciarAplicacion() {
-        /*
-         * Imprimimos un mensaje en la consola.
-         * System.out.println() imprime una línea de texto.
-         */
         System.out.println("========================================");
-        System.out.println("  MÓDULO DE PROVEEDORES - Iniciando...  ");
+        System.out.println("  SISTEMA DE GESTIÓN - Iniciando...  ");
         System.out.println("========================================");
         System.out.println();
 
         try {
-            /*
-             * Creamos una instancia de la ventana principal.
-             * 
-             * "new" crea un nuevo objeto en memoria.
-             * VentanaPrincipal() es el constructor de la clase.
-             */
-            VentanaPrincipal ventana = new VentanaPrincipal();
-
-            /*
-             * setVisible(true) hace que la ventana aparezca en pantalla.
-             * 
-             * Sin esta línea, la ventana existe en memoria pero
-             * el usuario no la vería.
-             */
+            // Crear la ventana unificada con tema oscuro
+            vista.VentanaUnificada ventana = new vista.VentanaUnificada();
             ventana.setVisible(true);
 
             System.out.println("Aplicación iniciada correctamente.");
-            System.out.println("La ventana principal está visible.");
+            System.out.println("Ventana unificada con tema oscuro activa.");
             System.out.println();
 
         } catch (Exception e) {
-            /*
-             * Si ocurre un error al iniciar, lo mostramos al usuario.
-             */
             System.err.println("ERROR: No se pudo iniciar la aplicación.");
             e.printStackTrace();
 
-            // También mostramos un diálogo de error
             JOptionPane.showMessageDialog(
-                    null, // null porque aún no hay ventana padre
+                    null,
                     "Error al iniciar la aplicación:\n" + e.getMessage(),
                     "Error Fatal",
                     JOptionPane.ERROR_MESSAGE);
 
-            // Terminamos la aplicación con código de error
-            /*
-             * System.exit(código) termina la aplicación.
-             * - código 0: terminación normal (exitosa)
-             * - código != 0: terminación con error
-             */
             System.exit(1);
         }
     }

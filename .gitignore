@@ -1,1 +1,37 @@
+# Archivos compilados
 bin/
+*.class
+
+# Archivos de configuración del IDE
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~
+
+# Logs
+*.log
+
+# Archivos de distribución
+dist/
+build/
+
+# Archivos de base de datos locales
+*.db
+*.sqlite
+
+# Archivos de respaldo
+backup/
+*.sql.backup

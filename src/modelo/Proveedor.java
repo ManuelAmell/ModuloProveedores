@@ -66,9 +66,15 @@ public class Proveedor {
     // Usamos "String" para texto/cadenas de caracteres
     private String nombre;
     
-    // Número de Identificación Tributaria
+    // Número de Identificación Tributaria (OPCIONAL)
     // Lo guardamos como String porque puede tener guiones o letras
     private String nit;
+    
+    // Tipo de proveedor (ropa, calzado, insumos, varios)
+    private String tipo;
+    
+    // Información de pago (banco, cuenta, etc.)
+    private String informacionPago;
     
     // Dirección física del proveedor
     private String direccion;
@@ -336,6 +342,42 @@ public class Proveedor {
      */
     public void setPersonaContacto(String personaContacto) {
         this.personaContacto = personaContacto;
+    }
+    
+    /**
+     * Obtiene el tipo de proveedor.
+     * 
+     * @return El tipo (ropa, calzado, insumos, varios)
+     */
+    public String getTipo() {
+        return tipo;
+    }
+    
+    /**
+     * Establece el tipo de proveedor.
+     * 
+     * @param tipo El nuevo tipo
+     */
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+    
+    /**
+     * Obtiene la información de pago.
+     * 
+     * @return La información de pago (banco, cuenta, etc.)
+     */
+    public String getInformacionPago() {
+        return informacionPago;
+    }
+    
+    /**
+     * Establece la información de pago.
+     * 
+     * @param informacionPago La nueva información de pago
+     */
+    public void setInformacionPago(String informacionPago) {
+        this.informacionPago = informacionPago;
     }
     
     /**

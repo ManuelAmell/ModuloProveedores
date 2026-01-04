@@ -1,165 +1,284 @@
-# 📦 Módulo de Proveedores - Sistema de Gestión
+# 🏢 Sistema de Gestión de Proveedores y Compras
 
-> Un proyecto educativo en Java con interfaz gráfica (Swing) diseñado para aprender **Programación Orientada a Objetos (POO)**.
+<div align="center">
 
-## 📚 Descripción
+![Version](https://img.shields.io/badge/version-2.2.5-blue.svg)
+![Java](https://img.shields.io/badge/Java-11+-orange.svg)
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
-Este proyecto implementa un módulo completo de gestión de proveedores con:
+Sistema completo para gestionar proveedores, compras y pagos con interfaz moderna de tema oscuro.
 
-- Interfaz gráfica moderna usando **Java Swing**
-- Arquitectura de 3 capas (Modelo-Servicio-Vista)
-- Patrón DAO (Data Access Object)
-- Comentarios detallados en **absolutamente todo el código** para facilitar el aprendizaje
+[Características](#-características) •
+[Instalación](#-inicio-rápido) •
+[Documentación](#-documentación) •
+[Contribuir](CONTRIBUTING.md)
 
-## 🎯 Conceptos de POO Demostrados
-
-| Concepto             | Dónde se aplica                             |
-| -------------------- | ------------------------------------------- |
-| **Clases y Objetos** | `Proveedor.java` - representación de datos  |
-| **Encapsulamiento**  | Atributos privados con getters/setters      |
-| **Herencia**         | `VentanaPrincipal extends JFrame`           |
-| **Interfaces**       | `ProveedorDAO` como contrato                |
-| **Polimorfismo**     | `ProveedorDAO dao = new ProveedorDAOImpl()` |
-| **Constructores**    | Sobrecarga de constructores en `Proveedor`  |
-| **Métodos**          | Organización por responsabilidad            |
-
-## 📁 Estructura del Proyecto
-
-```
-ModuloProveedores/
-├── src/
-│   ├── Main.java                    # Punto de entrada de la aplicación
-│   │
-│   ├── modelo/                      # Capa de Datos (Model)
-│   │   └── Proveedor.java           # Entidad Proveedor
-│   │
-│   ├── dao/                         # Capa de Acceso a Datos
-│   │   ├── ProveedorDAO.java        # Interfaz DAO
-│   │   └── ProveedorDAOImpl.java    # Implementación en memoria
-│   │
-│   ├── servicio/                    # Capa de Lógica de Negocio
-│   │   └── ProveedorService.java    # Servicio con validaciones
-│   │
-│   └── vista/                       # Capa de Interfaz Gráfica (GUI)
-│       ├── VentanaPrincipal.java    # Ventana principal con tabla
-│       └── FormularioProveedor.java # Diálogo para crear/editar
-│
-└── README.md                        # Este archivo
-```
-
-## 🏗️ Arquitectura de 3 Capas
-
-```
-┌─────────────────────────────────────────┐
-│           VISTA (GUI)                   │
-│  VentanaPrincipal, FormularioProveedor  │
-└───────────────────┬─────────────────────┘
-                    │ usa
-                    ▼
-┌─────────────────────────────────────────┐
-│         SERVICIO (Lógica)               │
-│         ProveedorService                │
-│   - Validaciones                        │
-│   - Reglas de negocio                   │
-└───────────────────┬─────────────────────┘
-                    │ usa
-                    ▼
-┌─────────────────────────────────────────┐
-│           DAO (Datos)                   │
-│   ProveedorDAO → ProveedorDAOImpl       │
-│   - Operaciones CRUD                    │
-│   - Acceso a datos                      │
-└─────────────────────────────────────────┘
-```
-
-## 🚀 Cómo Ejecutar
-
-### Requisitos
-
-- Java JDK 8 o superior
-- Terminal o IDE (VS Code, IntelliJ, Eclipse, NetBeans)
-
-### Compilar y Ejecutar desde Terminal
-
-```bash
-# 1. Navegar al directorio del proyecto
-cd ModuloProveedores
-
-# 2. Compilar todos los archivos Java
-javac -d bin src/modelo/*.java src/dao/*.java src/servicio/*.java src/vista/*.java src/Main.java
-
-# 3. Ejecutar la aplicación
-java -cp bin Main
-```
-
-### Ejecutar desde un IDE
-
-1. Importar el proyecto
-2. Marcar `src` como carpeta de fuentes
-3. Ejecutar `Main.java`
-
-## 🖥️ Funcionalidades
-
-### Ventana Principal
-
-- 📋 **Tabla de proveedores** - Muestra todos los proveedores con su información
-- 🔍 **Búsqueda** - Filtra proveedores por nombre
-- ✅ **Filtro de activos** - Muestra solo proveedores activos
-- 🔄 **Refrescar** - Recarga los datos de la tabla
-
-### Operaciones CRUD
-
-- ➕ **Nuevo** - Abre formulario para crear proveedor
-- ✏️ **Editar** - Modifica un proveedor existente
-- 🗑️ **Eliminar** - Borra un proveedor (con confirmación)
-
-### Validaciones
-
-- Nombre y NIT son obligatorios
-- NIT debe ser único (no duplicados)
-- Formato de email válido (debe contener @)
-
-## 📖 Archivos para Estudiar (en orden recomendado)
-
-1. **`Proveedor.java`** - Aprende sobre clases, atributos, constructores y encapsulamiento
-2. **`ProveedorDAO.java`** - Entiende qué son las interfaces y el patrón DAO
-3. **`ProveedorDAOImpl.java`** - Ve cómo implementar una interfaz y usar ArrayList
-4. **`ProveedorService.java`** - Comprende la capa de lógica y validaciones
-5. **`VentanaPrincipal.java`** - Explora Swing: JFrame, JTable, eventos
-6. **`FormularioProveedor.java`** - Conoce JDialog y layouts avanzados
-7. **`Main.java`** - Descubre cómo iniciar una aplicación Swing correctamente
-
-## 🧪 Datos de Ejemplo
-
-La aplicación viene con 3 proveedores de ejemplo:
-
-| ID  | Nombre                | NIT         | Activo |
-| --- | --------------------- | ----------- | ------ |
-| 1   | Distribuidora ABC     | 900123456-1 | ✓      |
-| 2   | Suministros del Norte | 800987654-2 | ✓      |
-| 3   | Importadora XYZ       | 700555888-3 | ✗      |
-
-## 📝 Conceptos Clave en los Comentarios
-
-Cada archivo contiene comentarios extensos que explican:
-
-- ✨ **Qué**: Qué hace cada clase, método o atributo
-- ❓ **Por qué**: Por qué se diseñó de esa manera
-- 🔧 **Cómo**: Cómo funciona el código paso a paso
-- 📌 **Ejemplos**: Ejemplos de uso cuando es útil
-
-## 🔮 Posibles Mejoras Futuras
-
-- [ ] Conectar a una base de datos real (MySQL, PostgreSQL)
-- [ ] Agregar más entidades (Productos, Pedidos)
-- [ ] Implementar exportación a Excel/PDF
-- [ ] Agregar autenticación de usuarios
-- [ ] Mejorar la interfaz con look and feel personalizado
-
-## 👨‍💻 Autor
-
-Proyecto creado con fines educativos para aprender Java y POO.
+</div>
 
 ---
 
-¡Happy Coding! 🎉
+## 🚀 Inicio Rápido
+
+### Windows (Instalador Precompilado)
+
+1. **Descargar:** `instaladores/ModuloProveedores-windows.zip`
+2. **Extraer** en una carpeta
+3. **Configurar base de datos:**
+   ```cmd
+   mysql -u root -p < db\schema.sql
+   ```
+4. **Ejecutar:** Doble clic en `ejecutar.bat`
+
+### Windows (Desde Código Fuente)
+
+```cmd
+mysql -u root -p < db\schema.sql
+compilar.bat
+ejecutar.bat
+```
+
+### Linux
+
+```bash
+bash setup_database.sh
+bash compilar.sh
+bash ejecutar.sh
+```
+
+---
+
+## 📋 Requisitos
+
+- Java JDK 11+
+- MySQL 8.0+
+- Windows / Linux / macOS
+
+---
+
+## ✨ Características
+
+### 🎯 Gestión Completa
+- ✅ Proveedores con información detallada
+- ✅ Compras con múltiples formas de pago
+- ✅ Categorías personalizables
+- ✅ Control de pagos y créditos
+
+### 🔍 Búsqueda y Filtros
+- ✅ Búsqueda de proveedores en tiempo real
+- ✅ Búsqueda de compras por múltiples criterios
+- ✅ Filtros por forma de pago, estado y fechas
+- ✅ Botón para limpiar todos los filtros
+
+### 💰 Gestión Financiera
+- ✅ Campos numéricos con formato automático (1.000.000,50)
+- ✅ Cálculo automático de totales
+- ✅ Saldo pendiente por proveedor
+- ✅ Estadísticas generales en tiempo real
+
+### 🎨 Interfaz Moderna
+- ✅ Tema oscuro elegante (azul)
+- ✅ Colores semánticos (rojo=pendiente, verde=pagado)
+- ✅ Proveedores destacados en morado
+- ✅ Letras grandes y legibles
+
+---
+
+## 📖 Documentación
+
+- **[MANUAL.md](MANUAL.md)** - Manual completo de usuario
+- **[CHANGELOG.md](CHANGELOG.md)** - Historial de cambios
+
+---
+
+## 🎯 Uso Básico
+
+### Agregar Proveedor
+1. Clic en **"+ Nuevo Proveedor"**
+2. Llenar nombre y datos
+3. Guardar
+
+### Registrar Compra
+1. Seleccionar proveedor
+2. Clic en **"+ Nueva Compra"**
+3. Llenar formulario:
+   - Factura, categoría, descripción
+   - Total (formato automático: 1.000.000)
+   - Fecha (dd/mm/aa)
+   - Forma de pago
+4. Guardar
+
+### Marcar como Pagado
+1. Seleccionar compra pendiente (roja)
+2. Clic en **"✓ Marcar Pagado"**
+3. Ingresar fecha de pago
+
+---
+
+## 🔧 Configuración
+
+### Base de Datos
+
+Editar `src/util/ConexionBD.java`:
+
+```java
+private static final String URL = "jdbc:mysql://localhost:3306/gestion_proveedores";
+private static final String USUARIO = "root";
+private static final String PASSWORD = "tu_password";
+```
+
+Recompilar después de cambios.
+
+---
+
+## 📊 Estructura del Proyecto
+
+```
+├── src/
+│   ├── dao/           # Acceso a datos
+│   ├── modelo/        # Clases de dominio
+│   ├── servicio/      # Lógica de negocio
+│   ├── util/          # Utilidades
+│   └── vista/         # Interfaz gráfica
+├── db/
+│   └── schema.sql     # Estructura de BD
+├── lib/
+│   └── mysql-connector-j-9.1.0.jar
+├── instaladores/      # Versiones empaquetadas
+├── ejecutar.bat       # Ejecutar en Windows
+├── ejecutar.sh        # Ejecutar en Linux
+└── MANUAL.md          # Manual completo
+```
+
+---
+
+## 🎨 Capturas
+
+### Panel Principal
+- Lista de proveedores con búsqueda
+- Tabla de compras con filtros avanzados
+- Estadísticas en tiempo real
+
+### Formulario de Compra
+- Campos numéricos con formato automático
+- Categorías personalizables
+- Validación en tiempo real
+
+### Colores
+- 🔴 Rojo: Pendientes
+- 🟢 Verde: Pagados
+- 🟣 Morado: Proveedores
+- 🔵 Azul: Tema principal
+
+---
+
+## 🐛 Solución de Problemas
+
+### Error de Conexión
+```bash
+# Verificar MySQL
+mysql -u root -p
+
+# Crear base de datos
+mysql -u root -p < db/schema.sql
+```
+
+### Error de Compilación
+```bash
+# Verificar Java
+java -version
+
+# Recompilar
+bash compilar.sh  # Linux
+# O compilar manualmente en Windows
+```
+
+---
+
+## 📝 Changelog
+
+### v2.2.5 (Actual)
+- ✨ Campos numéricos con formato automático
+- ✨ Saldo pendiente por proveedor
+- 🐛 Botón limpiar más grande
+
+### v2.2.4
+- ✨ Saldo pendiente por proveedor
+
+### v2.2.3
+- ✨ Placeholders en campos de fecha
+
+### v2.2.2
+- 🐛 Corrección contador de pendientes
+
+### v2.2.1
+- ✨ Edición de estado de pago con checkbox
+
+### v2.2.0
+- ✨ Tema azul oscuro elegante
+- ✨ Colores simplificados
+- ✨ Letras más grandes
+
+### v2.1.0
+- ✨ Búsqueda de proveedores
+- ✨ Filtros avanzados de compras
+- ✨ Mejoras visuales
+
+Ver [CHANGELOG.md](CHANGELOG.md) para más detalles.
+
+---
+
+## 📄 Licencia
+
+Ver archivo [LICENSE](LICENSE)
+
+---
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Por favor lee [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre nuestro código de conducta y el proceso para enviar pull requests.
+
+### Pasos Rápidos
+
+1. Fork del proyecto
+2. Crear rama (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'feat: Add AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
+
+---
+
+## 🔒 Seguridad
+
+Para reportar vulnerabilidades de seguridad, consulta [SECURITY.md](SECURITY.md).
+
+---
+
+## 📄 Licencia
+
+Ver archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+## 👥 Autores
+
+- **Desarrollador Principal** - *Trabajo inicial* - [Tu GitHub](https://github.com/tu-usuario)
+
+---
+
+## 🙏 Agradecimientos
+
+- Comunidad Java
+- Contribuidores del proyecto
+- Usuarios que reportan issues y sugerencias
+
+---
+
+<div align="center">
+
+**⭐ Si este proyecto te fue útil, considera darle una estrella ⭐**
+
+Hecho con ☕ y Java
+
+</div>
