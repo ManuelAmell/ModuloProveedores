@@ -73,14 +73,11 @@ public class DialogoItems extends JDialog {
     }
     
     private void configurarDialogo() {
-        Window parent = getOwner();
-        if (parent != null) {
-            setSize(parent.getWidth(), parent.getHeight());
-        } else {
-            setSize(1080, 720);
-        }
+        // Tamaño fijo razonable para ver todo el contenido
+        setSize(1200, 750);
         setLocationRelativeTo(getParent());
         setResizable(true);
+        setMinimumSize(new Dimension(1000, 600));
         getContentPane().setBackground(BG_PRINCIPAL);
         
         try {
