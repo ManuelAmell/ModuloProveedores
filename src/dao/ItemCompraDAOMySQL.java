@@ -5,8 +5,7 @@ import util.ConexionBD;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Implementación MySQL de ItemCompraDAO.
@@ -294,6 +293,43 @@ public class ItemCompraDAOMySQL implements ItemCompraDAO {
         }
         
         return 0;
+    }
+    
+    @Override
+    public Map<Integer, Integer> sumarCantidadesPorCompras(List<Integer> idsCompras) {
+        Map<Integer, Integer> resultado = new HashMap<>();
+        
+        if (idsCompras == null || idsCompras.isEmpty()) {
+            return resultado;
+        }
+        
+        // Construir placeholders para IN clause
+        String placeholders = String.join(",", Collections.nCopies(idsCompras.size(), "?"));
+        String sql = "SELECT id_compra, SUM(cantidad) as total " +
+                     "FROM items_compra " +
+                     "WHERE id_compra IN (" + placeholders + ") " +
+                     "GROUP BY id_compra";
+        
+        try (Connection conn = conexionBD.getConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Setear parámetros
+            for (int i = 0; i < idsCompras.size(); i++) {
+                stmt.setInt(i + 1, idsCompras.get(i));
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    resultado.put(rs.getInt("id_compra"), rs.getInt("total"));
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error al sumar cantidades batch: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return resultado;
     }
     
     private ItemCompra mapearResultSet(ResultSet rs) throws SQLException {

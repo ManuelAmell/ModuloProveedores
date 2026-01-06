@@ -11,8 +11,9 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 import modelo.*;
 import servicio.CompraService;
@@ -24,6 +25,14 @@ import util.GeneradorFacturaMarkdown;
  * TODO en una sola pantalla: proveedores + compras + estadísticas.
  */
 public class VentanaUnificada extends JFrame {
+    
+    // Formatters reutilizables (optimización: evita crear en cada llamada)
+    private static final NumberFormat FORMATO_MONEDA = 
+        NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+    private static final DateTimeFormatter FORMATO_FECHA = 
+        DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FORMATO_FECHA_INPUT = 
+        DateTimeFormatter.ofPattern("[dd/MM/yy][dd/MM/yyyy][dd-MM-yy][dd-MM-yyyy]");
     
     // Tema oscuro con fondo azul
     private final Color BG_PRINCIPAL = new Color(25, 35, 55);  // Azul oscuro
@@ -82,6 +91,9 @@ public class VentanaUnificada extends JFrame {
     private JButton btnPaginaAnterior;
     private JButton btnPaginaSiguiente;
     private JLabel lblPaginacion;
+    
+    // Timer para debounce en búsqueda
+    private javax.swing.Timer searchTimer;
     
     public VentanaUnificada() {
         this.proveedorService = new ProveedorService();
@@ -254,11 +266,11 @@ public class VentanaUnificada extends JFrame {
         ));
         txtBuscarProveedor.setToolTipText("Buscar proveedor por nombre");
         
-        // Búsqueda en tiempo real
+        // Búsqueda en tiempo real con debounce (300ms)
         txtBuscarProveedor.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { filtrarProveedores(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { filtrarProveedores(); }
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { filtrarProveedores(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { buscarConDebounce(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { buscarConDebounce(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { buscarConDebounce(); }
         });
         
         panelBusquedaProveedor.add(lblBuscarIcon, BorderLayout.WEST);
@@ -709,6 +721,19 @@ public class VentanaUnificada extends JFrame {
         }
     }
     
+    /**
+     * Búsqueda con debounce (300ms) para evitar búsquedas excesivas mientras el usuario escribe.
+     */
+    private void buscarConDebounce() {
+        if (searchTimer != null && searchTimer.isRunning()) {
+            searchTimer.stop();
+        }
+        
+        searchTimer = new javax.swing.Timer(300, e -> filtrarProveedores());
+        searchTimer.setRepeats(false);
+        searchTimer.start();
+    }
+    
     private void limpiarFiltros() {
         txtBuscarCompra.setText("");
         cmbFiltroFormaPago.setSelectedIndex(0);
@@ -930,48 +955,55 @@ public class VentanaUnificada extends JFrame {
             return;
         }
         
-        NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
-        DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        
         // Calcular índices de inicio y fin para la página actual
         int inicio = paginaActual * FACTURAS_POR_PAGINA;
         int fin = Math.min(inicio + FACTURAS_POR_PAGINA, comprasCompletas.size());
         
-        // Cargar solo las compras de la página actual
+        // Obtener IDs de la página actual
+        List<Integer> ids = new ArrayList<>(fin - inicio);
+        for (int i = inicio; i < fin; i++) {
+            ids.add(comprasCompletas.get(i).getId());
+        }
+        
+        // Una sola consulta para todas las cantidades (batch query)
+        Map<Integer, Integer> cantidades = compraService.obtenerCantidadesBatch(ids);
+        
+        // Cargar filas
         for (int i = inicio; i < fin; i++) {
             Compra c = comprasCompletas.get(i);
             
-            // Capitalizar primera letra de categoría para mostrar
-            String categoriaDisplay = c.getCategoria();
-            if (categoriaDisplay != null && !categoriaDisplay.isEmpty()) {
-                categoriaDisplay = categoriaDisplay.substring(0, 1).toUpperCase() + categoriaDisplay.substring(1);
-            }
-            
-            // Determinar estado de pago
-            String estadoDisplay = "";
-            if (c.getFormaPago() == FormaPago.CREDITO) {
-                estadoDisplay = c.getEstadoCredito() != null ? c.getEstadoCredito().getEtiqueta() : "";
-            } else {
-                // Para efectivo y transferencia, mostrar "Pagado" si tiene fecha de pago
-                estadoDisplay = c.getFechaPago() != null ? "Pagado" : "Pendiente";
-            }
-            
-            // Sumar cantidades de todos los items de la compra
-            int cantidadTotal = compraService.sumarCantidadesDeCompra(c.getId());
-            
             Object[] fila = {
                 c.getNumeroFactura(),
-                categoriaDisplay,
-                c.getDescripcion().length() > 40 ? c.getDescripcion().substring(0, 37) + "..." : c.getDescripcion(),
-                cantidadTotal > 0 ? String.valueOf(cantidadTotal) : "",
-                formatoMoneda.format(c.getTotal()),
-                c.getFechaCompra().format(formatoFecha),
+                capitalizarCategoria(c.getCategoria()),
+                truncarDescripcion(c.getDescripcion(), 40),
+                cantidades.getOrDefault(c.getId(), 0),
+                FORMATO_MONEDA.format(c.getTotal()),
+                c.getFechaCompra().format(FORMATO_FECHA),
                 c.getFormaPago().getEtiqueta(),
-                estadoDisplay,
-                c.getFechaPago() != null ? c.getFechaPago().format(formatoFecha) : ""
+                obtenerEstadoDisplay(c),
+                c.getFechaPago() != null ? c.getFechaPago().format(FORMATO_FECHA) : ""
             };
             modeloTablaCompras.addRow(fila);
         }
+    }
+    
+    // Métodos helper para mejorar legibilidad y rendimiento
+    
+    private String capitalizarCategoria(String categoria) {
+        if (categoria == null || categoria.isEmpty()) return "";
+        return categoria.substring(0, 1).toUpperCase() + categoria.substring(1);
+    }
+    
+    private String truncarDescripcion(String desc, int maxLen) {
+        if (desc == null) return "";
+        return desc.length() > maxLen ? desc.substring(0, maxLen - 3) + "..." : desc;
+    }
+    
+    private String obtenerEstadoDisplay(Compra c) {
+        if (c.getFormaPago() == FormaPago.CREDITO) {
+            return c.getEstadoCredito() != null ? c.getEstadoCredito().getEtiqueta() : "";
+        }
+        return c.getFechaPago() != null ? "Pagado" : "Pendiente";
     }
     
     private void cambiarPagina(int direccion) {

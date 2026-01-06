@@ -8,7 +8,7 @@ import modelo.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 /**
  * Servicio que maneja la lógica de negocio para Compras.
@@ -18,59 +18,25 @@ public class CompraService {
     private final CompraDAO compraDAO;
     private final ItemCompraDAO itemCompraDAO;
     
+    // Caché con límite de 100 entradas (LRU)
+    private final Map<Integer, Integer> cacheCantidades = 
+        Collections.synchronizedMap(new LinkedHashMap<Integer, Integer>(100, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+                return size() > 100;
+            }
+        });
+    
     public CompraService() {
         this.compraDAO = new CompraDAOMySQL();
         this.itemCompraDAO = new ItemCompraDAOMySQL();
     }
     
     public String registrarCompra(Compra compra) {
-        // Validaciones
-        if (compra.getIdProveedor() <= 0) {
-            return "Error: Debe seleccionar un proveedor";
-        }
-        
-        if (compra.getNumeroFactura() == null || compra.getNumeroFactura().trim().isEmpty()) {
-            return "Error: El número de factura es obligatorio";
-        }
-        
-        if (compra.getCategoria() == null) {
-            return "Error: Debe seleccionar una categoría";
-        }
-        
-        if (compra.getDescripcion() == null || compra.getDescripcion().trim().isEmpty()) {
-            return "Error: La descripción es obligatoria";
-        }
-        
-        if (compra.getTotal() == null || compra.getTotal().compareTo(BigDecimal.ZERO) <= 0) {
-            return "Error: El total debe ser mayor a cero";
-        }
-        
-        if (compra.getFechaCompra() == null) {
-            return "Error: La fecha de compra es obligatoria";
-        }
-        
-        if (compra.getFormaPago() == null) {
-            return "Error: Debe seleccionar una forma de pago";
-        }
-        
-        // Validaciones específicas para crédito
-        if (compra.getFormaPago() == FormaPago.CREDITO) {
-            if (compra.getEstadoCredito() == null) {
-                return "Error: Debe especificar el estado del crédito";
-            }
-            
-            if (compra.getEstadoCredito() == EstadoCredito.PAGADO && compra.getFechaPago() == null) {
-                return "Error: Si el crédito está pagado, debe especificar la fecha de pago";
-            }
-            
-            if (compra.getEstadoCredito() == EstadoCredito.PENDIENTE && compra.getFechaPago() != null) {
-                return "Error: Un crédito pendiente no puede tener fecha de pago";
-            }
-        } else {
-            // Para efectivo y transferencia, no debe tener estado de crédito
-            if (compra.getEstadoCredito() != null) {
-                return "Error: Solo las compras a crédito pueden tener estado de crédito";
-            }
+        // Usar el método de validación existente
+        String validacion = validarDatosCompra(compra);
+        if (validacion != null) {
+            return validacion;
         }
         
         boolean exito = compraDAO.insertar(compra);
@@ -384,6 +350,9 @@ public class CompraService {
         System.out.println("Items guardados: " + itemsGuardados + " de " + items.size());
         System.out.println("Total final: $" + totalCalculado);
         
+        // Invalidar caché después de actualizar
+        cacheCantidades.remove(compra.getId());
+        
         return "Compra con " + items.size() + " items actualizada exitosamente";
     }
     
@@ -402,9 +371,25 @@ public class CompraService {
     }
     
     /**
-     * Suma las cantidades de todos los items de una compra.
+     * Suma las cantidades de todos los items de una compra (con caché).
      */
     public int sumarCantidadesDeCompra(int idCompra) {
-        return itemCompraDAO.sumarCantidadesPorCompra(idCompra);
+        return cacheCantidades.computeIfAbsent(idCompra, 
+            id -> itemCompraDAO.sumarCantidadesPorCompra(id));
+    }
+    
+    /**
+     * Obtiene cantidades de múltiples compras en una sola consulta (batch query).
+     * Optimización para evitar N consultas individuales.
+     */
+    public Map<Integer, Integer> obtenerCantidadesBatch(List<Integer> idsCompras) {
+        return itemCompraDAO.sumarCantidadesPorCompras(idsCompras);
+    }
+    
+    /**
+     * Limpia toda la caché (llamar al cerrar sesión o cambiar proveedor).
+     */
+    public void limpiarCache() {
+        cacheCantidades.clear();
     }
 }

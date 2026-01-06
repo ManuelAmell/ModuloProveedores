@@ -2,6 +2,7 @@ package dao;
 
 import modelo.ItemCompra;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interfaz para operaciones de acceso a datos de ItemCompra.
@@ -20,4 +21,10 @@ public interface ItemCompraDAO {
     boolean eliminarPorCompra(int idCompra);
     int contarItemsPorCompra(int idCompra);
     int sumarCantidadesPorCompra(int idCompra);
+    
+    /**
+     * Obtiene cantidades de múltiples compras en una sola consulta (batch query).
+     * Optimización para evitar N consultas individuales.
+     */
+    Map<Integer, Integer> sumarCantidadesPorCompras(List<Integer> idsCompras);
 }
