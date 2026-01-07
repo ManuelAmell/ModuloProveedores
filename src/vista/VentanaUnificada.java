@@ -7,6 +7,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import modelo.*;
 import servicio.CompraService;
 import servicio.ProveedorService;
 import util.GeneradorFacturaMarkdown;
+import util.MensajesUsuario;
 
 /**
  * Ventana unificada con tema oscuro estilo VS Code.
@@ -101,8 +103,14 @@ public class VentanaUnificada extends JFrame {
         
         configurarVentana();
         inicializarComponentes();
-        cargarProveedores();
-        actualizarEstadisticasGenerales();
+        configurarAtajosTeclado();
+        configurarTooltips();
+        
+        // Lazy loading: cargar datos después de mostrar ventana (reduce CPU en startup)
+        SwingUtilities.invokeLater(() -> {
+            cargarProveedores();
+            actualizarEstadisticasGenerales();
+        });
     }
 
     
@@ -168,14 +176,44 @@ public class VentanaUnificada extends JFrame {
         lblTitulo.setForeground(ACENTO);
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
         
-        // Reloj a la derecha
+        // Panel derecho con reloj y botón de configuración
+        JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        panelDerecho.setBackground(BG_PANEL);
+        
+        // Reloj
         lblReloj = new JLabel();
         lblReloj.setForeground(ACENTO);
         lblReloj.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblReloj.setHorizontalAlignment(JLabel.RIGHT);
+        
+        // Botón de configuración (engranaje)
+        JButton btnConfiguracion = new JButton("⚙");
+        btnConfiguracion.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        btnConfiguracion.setForeground(TEXTO_SECUNDARIO);
+        btnConfiguracion.setBackground(BG_PANEL);
+        btnConfiguracion.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        btnConfiguracion.setFocusPainted(false);
+        btnConfiguracion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnConfiguracion.setToolTipText("Configuración (Ctrl+L)");
+        
+        // Efecto hover
+        btnConfiguracion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btnConfiguracion.setForeground(ACENTO);
+                btnConfiguracion.setBackground(BG_INPUT);
+            }
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btnConfiguracion.setForeground(TEXTO_SECUNDARIO);
+                btnConfiguracion.setBackground(BG_PANEL);
+            }
+        });
+        
+        btnConfiguracion.addActionListener(e -> abrirConfiguracion());
+        
+        panelDerecho.add(lblReloj);
+        panelDerecho.add(btnConfiguracion);
         
         panel.add(lblTitulo, BorderLayout.WEST);
-        panel.add(lblReloj, BorderLayout.EAST);
+        panel.add(panelDerecho, BorderLayout.EAST);
         
         return panel;
     }
@@ -184,16 +222,72 @@ public class VentanaUnificada extends JFrame {
         // Actualizar hora inmediatamente
         actualizarHora();
         
-        // Actualizar cada segundo
-        timerReloj = new javax.swing.Timer(1000, e -> actualizarHora());
+        // Obtener intervalo de configuración
+        int intervalo = DialogoConfiguracion.getIntervaloReloj();
+        
+        // Actualizar según configuración
+        timerReloj = new javax.swing.Timer(intervalo, e -> actualizarHora());
         timerReloj.start();
+        
+        // Pausar timer cuando ventana está minimizada (si está habilitado)
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowIconified(java.awt.event.WindowEvent e) {
+                if (DialogoConfiguracion.isPausarMinimizadoEnabled() && 
+                    timerReloj != null && timerReloj.isRunning()) {
+                    timerReloj.stop();
+                }
+            }
+            
+            @Override
+            public void windowDeiconified(java.awt.event.WindowEvent e) {
+                if (timerReloj != null && !timerReloj.isRunning()) {
+                    actualizarHora(); // Actualizar inmediatamente
+                    timerReloj.start();
+                }
+            }
+        });
     }
     
     private void actualizarHora() {
-        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
-        java.time.format.DateTimeFormatter formatter = 
-            java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss - dd/MM/yyyy");
-        lblReloj.setText(ahora.format(formatter));
+        // Usar formato con o sin segundos según configuración
+        String patron = DialogoConfiguracion.isRelojSegundosEnabled() 
+            ? "HH:mm:ss - dd/MM/yyyy" 
+            : "HH:mm - dd/MM/yyyy";
+        
+        lblReloj.setText(java.time.LocalDateTime.now().format(
+            java.time.format.DateTimeFormatter.ofPattern(patron)));
+    }
+    
+    /**
+     * Reinicia el timer del reloj con el nuevo intervalo configurado.
+     * Llamado desde DialogoConfiguracion cuando cambia el intervalo.
+     */
+    public void reiniciarReloj() {
+        if (timerReloj != null) {
+            timerReloj.stop();
+        }
+        
+        actualizarHora();
+        int intervalo = DialogoConfiguracion.getIntervaloReloj();
+        timerReloj = new javax.swing.Timer(intervalo, e -> actualizarHora());
+        timerReloj.start();
+        
+        if (DialogoConfiguracion.isDebugMode()) {
+            System.out.println("✓ Reloj reiniciado con intervalo: " + intervalo + "ms");
+        }
+    }
+    
+    /**
+     * Actualiza el formato del reloj (con o sin segundos).
+     * Llamado desde DialogoConfiguracion cuando cambia la opción.
+     */
+    public void actualizarFormatoReloj() {
+        actualizarHora();
+        
+        if (DialogoConfiguracion.isDebugMode()) {
+            System.out.println("✓ Formato de reloj actualizado");
+        }
     }
 
     
@@ -320,11 +414,17 @@ public class VentanaUnificada extends JFrame {
         JButton btnEditar = crearBoton("✎ Editar", BG_INPUT);
         JButton btnRefrescar = crearBoton("⟳ Refrescar", BG_INPUT);
         
+        // Tooltips para ayuda contextual
+        btnNuevo.setToolTipText("Agregar un nuevo proveedor (Ctrl+N)");
+        btnEditar.setToolTipText("Editar proveedor seleccionado (Ctrl+E)");
+        btnRefrescar.setToolTipText("Actualizar lista de proveedores (F5)");
+        
         btnNuevo.addActionListener(e -> nuevoProveedor());
         btnEditar.addActionListener(e -> editarProveedor());
         btnRefrescar.addActionListener(e -> {
             cargarProveedores();
             actualizarEstadisticasGenerales();
+            ToastNotification.mostrar(this, "Datos actualizados", ToastNotification.Tipo.INFO);
         });
         
         panelBotones.add(btnNuevo);
@@ -382,6 +482,12 @@ public class VentanaUnificada extends JFrame {
         JButton btnEditarCompra = crearBoton("✎ Editar", BG_INPUT);
         JButton btnMarcarPagado = crearBoton("✓ Marcar Pagado", ADVERTENCIA);
         JButton btnVerCompra = crearBoton("👁 Ver", ACENTO);
+        
+        // Tooltips para ayuda contextual
+        btnNuevaCompra.setToolTipText("Registrar nueva compra/factura (Ctrl+C)");
+        btnEditarCompra.setToolTipText("Editar compra seleccionada (Ctrl+M)");
+        btnMarcarPagado.setToolTipText("Marcar crédito como pagado (Ctrl+P)");
+        btnVerCompra.setToolTipText("Ver detalles de la compra (Ctrl+V)");
         
         btnNuevaCompra.addActionListener(e -> nuevaCompra());
         btnEditarCompra.addActionListener(e -> editarCompra());
@@ -1190,20 +1296,18 @@ public class VentanaUnificada extends JFrame {
                 // Para crédito, usar el método específico
                 String resultado = compraService.marcarCreditoComoPagado(compraSeleccionada.getId(), fechaPago);
                 if (resultado.startsWith("Error")) {
-                    JOptionPane.showMessageDialog(this, resultado, "Error", JOptionPane.ERROR_MESSAGE);
+                    MensajesUsuario.error(this, resultado.replace("Error:", "").trim());
                 } else {
-                    JOptionPane.showMessageDialog(this, "Crédito marcado como pagado exitosamente", 
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    ToastNotification.mostrar(this, "Crédito marcado como pagado", ToastNotification.Tipo.EXITO);
                 }
             } else {
                 // Para efectivo y transferencia, actualizar directamente
                 compraSeleccionada.setFechaPago(fechaPago);
                 String resultado = compraService.actualizarCompra(compraSeleccionada);
                 if (resultado.startsWith("Error")) {
-                    JOptionPane.showMessageDialog(this, resultado, "Error", JOptionPane.ERROR_MESSAGE);
+                    MensajesUsuario.error(this, resultado.replace("Error:", "").trim());
                 } else {
-                    JOptionPane.showMessageDialog(this, "Compra marcada como pagada exitosamente", 
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    ToastNotification.mostrar(this, "Compra marcada como pagada", ToastNotification.Tipo.EXITO);
                 }
             }
             
@@ -1317,5 +1421,101 @@ public class VentanaUnificada extends JFrame {
                 }
             }
         });
+    }
+    
+    /**
+     * Configura atajos de teclado para acciones comunes
+     */
+    private void configurarAtajosTeclado() {
+        // Ctrl+N: Nuevo proveedor
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK), "nuevoProveedor");
+        getRootPane().getActionMap().put("nuevoProveedor", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                nuevoProveedor();
+            }
+        });
+        
+        // Ctrl+E: Editar proveedor
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK), "editarProveedor");
+        getRootPane().getActionMap().put("editarProveedor", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                editarProveedor();
+            }
+        });
+        
+        // Ctrl+C: Nueva compra
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "nuevaCompra");
+        getRootPane().getActionMap().put("nuevaCompra", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                nuevaCompra();
+            }
+        });
+        
+        // Ctrl+M: Editar compra
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.CTRL_DOWN_MASK), "editarCompra");
+        getRootPane().getActionMap().put("editarCompra", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                editarCompra();
+            }
+        });
+        
+        // Ctrl+P: Marcar pagado
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK), "marcarPagado");
+        getRootPane().getActionMap().put("marcarPagado", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                marcarComoPagado();
+            }
+        });
+        
+        // Ctrl+L: Configuración
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK), "configuracion");
+        getRootPane().getActionMap().put("configuracion", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                abrirConfiguracion();
+            }
+        });
+        
+        // F5: Refrescar
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "refrescar");
+        getRootPane().getActionMap().put("refrescar", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                cargarProveedores();
+                cargarComprasProveedor();
+                actualizarEstadisticasGenerales();
+                ToastNotification.mostrar(VentanaUnificada.this, 
+                    "Datos actualizados", ToastNotification.Tipo.INFO);
+            }
+        });
+    }
+    
+    /**
+     * Abre el diálogo de configuración
+     */
+    private void abrirConfiguracion() {
+        DialogoConfiguracion dialogo = new DialogoConfiguracion(this);
+        dialogo.setVisible(true);
+        
+        // Los cambios ya se aplicaron en tiempo real, no necesita mensaje
+    }
+    
+    /**
+     * Configura tooltips personalizados
+     */
+    private void configurarTooltips() {
+        // Personalizar estilo de tooltips
+        UIManager.put("ToolTip.background", new Color(30, 42, 65));
+        UIManager.put("ToolTip.foreground", Color.WHITE);
+        UIManager.put("ToolTip.border", BorderFactory.createLineBorder(new Color(0, 150, 255)));
+        
+        // Configurar tiempo de aparición
+        ToolTipManager.sharedInstance().setInitialDelay(500);  // 0.5 segundos
+        ToolTipManager.sharedInstance().setDismissDelay(10000); // 10 segundos visible
     }
 }

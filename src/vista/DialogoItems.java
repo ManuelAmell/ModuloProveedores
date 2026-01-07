@@ -116,9 +116,9 @@ public class DialogoItems extends JDialog {
         lblHoraActual.setHorizontalAlignment(JLabel.RIGHT);
         panelTituloReloj.add(lblHoraActual, BorderLayout.EAST);
         
-        // Iniciar reloj
+        // Iniciar reloj optimizado (30 segundos)
         actualizarHora();
-        timerReloj = new javax.swing.Timer(1000, e -> actualizarHora());
+        timerReloj = new javax.swing.Timer(30000, e -> actualizarHora());
         timerReloj.start();
         
         panelSuperior.add(panelTituloReloj);
@@ -958,9 +958,9 @@ public class DialogoItems extends JDialog {
     }
     
     private void actualizarHora() {
-        java.time.LocalTime ahora = java.time.LocalTime.now();
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
-        lblHoraActual.setText(ahora.format(formatter));
+        // Sin segundos para reducir actualizaciones
+        lblHoraActual.setText(java.time.LocalTime.now().format(
+            java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
     }
     
     private void actualizarResumenItems() {

@@ -40,8 +40,15 @@ public class ToggleSwitch extends JPanel {
             targetX = circleX;
         }
         
-        // Configurar animación
-        animationTimer = new Timer(10, e -> {
+        // Configurar animación con velocidad desde configuración (16ms = 60 FPS por defecto)
+        int intervalo = 16; // Por defecto 60 FPS
+        try {
+            intervalo = vista.DialogoConfiguracion.getIntervaloAnimacion();
+        } catch (Exception e) {
+            // Si falla, usar 60 FPS por defecto
+        }
+        
+        animationTimer = new Timer(intervalo, e -> {
             float diff = targetX - circleX;
             if (Math.abs(diff) > 0.5f) {
                 circleX += diff * 0.3f;

@@ -18,12 +18,12 @@ public class CompraService {
     private final CompraDAO compraDAO;
     private final ItemCompraDAO itemCompraDAO;
     
-    // Caché con límite de 100 entradas (LRU)
+    // Caché con límite de 50 entradas (LRU) - Optimizado para memoria
     private final Map<Integer, Integer> cacheCantidades = 
-        Collections.synchronizedMap(new LinkedHashMap<Integer, Integer>(100, 0.75f, true) {
+        Collections.synchronizedMap(new LinkedHashMap<Integer, Integer>(50, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
-                return size() > 100;
+                return size() > 50;
             }
         });
     

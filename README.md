@@ -315,7 +315,7 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 ## 👥 Autores
 
-- **Desarrollador Principal** - [Tu Nombre](https://github.com/tu-usuario)
+- **Desarrollador Principal** - [Manuel Amell] (https://github.com/Manuel_Amell)
 
 ## 🙏 Agradecimientos
 
@@ -325,7 +325,7 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 ## 📞 Soporte
 
-- 📧 Email: tu-email@ejemplo.com
+- 📧 Email: manuelfcoamell@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/tu-usuario/ModuloProveedores/issues)
 - 📖 Wiki: [GitHub Wiki](https://github.com/tu-usuario/ModuloProveedores/wiki)
 

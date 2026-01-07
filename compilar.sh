@@ -37,6 +37,7 @@ echo ""
 # Compilar interfaces (vistas)
 echo -e "${BLUE}[3/4] Compilando interfaces...${NC}"
 javac -d bin -cp "lib/*:bin:src" \
+    src/vista/PantallaCarga.java \
     src/vista/VentanaUnificada.java \
     src/vista/FormularioProveedorDark.java \
     src/vista/FormularioCompraDark.java

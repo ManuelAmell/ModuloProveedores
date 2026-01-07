@@ -163,13 +163,25 @@ public class Main {
         System.out.println();
 
         try {
-            // Crear la ventana unificada con tema oscuro
-            vista.VentanaUnificada ventana = new vista.VentanaUnificada();
-            ventana.setVisible(true);
+            // Crear y mostrar pantalla de carga
+            vista.PantallaCarga pantallaCarga = new vista.PantallaCarga();
+            pantallaCarga.setVisible(true);
+            
+            // Simular carga y luego abrir ventana principal
+            pantallaCarga.simularCarga(() -> {
+                // Crear la ventana unificada con tema oscuro
+                vista.VentanaUnificada ventana = new vista.VentanaUnificada();
+                ventana.setVisible(true);
+                
+                // Asegurar que la ventana principal pase a primer plano
+                ventana.toFront();
+                ventana.requestFocus();
+                ventana.setState(JFrame.NORMAL);
 
-            System.out.println("Aplicación iniciada correctamente.");
-            System.out.println("Ventana unificada con tema oscuro activa.");
-            System.out.println();
+                System.out.println("Aplicación iniciada correctamente.");
+                System.out.println("Ventana unificada con tema oscuro activa.");
+                System.out.println();
+            });
 
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo iniciar la aplicación.");
